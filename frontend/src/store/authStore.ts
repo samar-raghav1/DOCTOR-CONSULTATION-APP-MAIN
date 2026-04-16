@@ -18,6 +18,7 @@ interface AuthState {
   //Api Actions
   loginDoctor: (email: string, password: string) => Promise<void>;
   loginPatient: (email: string, password: string) => Promise<void>;
+  loginAdmin: (email: string, password: string) => Promise<void>;
   registerDoctor: (data: any) => Promise<void>;
   registerPatient: (data: any) => Promise<void>;
   fetchProfile: () => Promise<User | null>;
@@ -84,6 +85,22 @@ export const userAuthStore = create<AuthState>()(
         set({ loading: false });
       }
     },
+    
+    loginAdmin: async (email, password) => {
+      set({ loading: true, error: null });
+      try {
+        const response = await postWithoutAuth("/admin/auth/login", {
+          email,
+          password,
+        });
+        get().setUser(response.data.user, response.data.token);
+      } catch (error: any) {
+        set({ error: error.message });
+        throw error;
+      } finally {
+        set({ loading: false });
+      }
+    },
 
     registerDoctor: async (data) => {
       set({ loading: true, error: null });
@@ -117,7 +134,7 @@ export const userAuthStore = create<AuthState>()(
         try {
             const {user} = get();
             if(!user) throw new Error("No user found");
-            const endPoint = user.type === 'doctor' ? "/doctor/me" : "/patient/me";
+            const endPoint = user.type === 'doctor' ? "/doctor/me" : user.type === 'admin' ? "/admin/profile" : "/patient/me";
             const response = await getWithAuth(endPoint)
             set({user: {...user, ...response.data}})
             return response.data;

@@ -201,13 +201,14 @@ router.get(
         status: "Completed",
       });
 
-      const totalAppointment = await Appointment.find({
+      const paidAppointment = await Appointment.find({
         doctorId,
         status: "Completed",
+        payoutStatus: "Paid",
       });
 
-      const totalRevenue = totalAppointment.reduce(
-        (sum, apt) => sum + (apt.fees || doctor.fees || 0),
+      const totalRevenue = paidAppointment.reduce(
+        (sum, apt) => sum + (apt.consultationFees || doctor.fees || 0),
         0
       );
 

@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const Doctor = require('../modal/Doctor');
 const Patient = require('../modal/Patient');
+const Admin = require('../modal/Admin');
 
 
 module.exports = {
@@ -17,6 +18,8 @@ module.exports = {
                 req.user = await Doctor.findById(decode.id);
             }else if(decode.type === 'patient'){
                 req.user = await Patient.findById(decode.id);
+            }else if(decode.type === 'admin') {
+                req.user = await Admin.findById(decode.id);
             }
 
             if(!req.user) return res.unauthorized("Invalid user");
@@ -28,6 +31,21 @@ module.exports = {
     requireRole : role => (req,res,next) => {
         if(!req.auth || req.auth.type !== role) {
             return res.forbidden("Insufficient role permissions");
+        }
+        next();
+    },
+    requireAdmin: (req,res,next) => {
+        if(!req.auth || req.auth.type !== 'admin') {
+            return res.forbidden("Admin access required");
+        }
+        if(!req.user || !req.user.isActive) {
+            return res.unauthorized("Admin account deactivated");
+        }
+        next();
+    },
+    requirePermission:(permission) => async (req,res,next) => {
+        if(!req.user || !req.user.permissions || !req.user.permissions[permission]) {
+            return res.forbidden(`Permission ${permission} required`);
         }
         next();
     }

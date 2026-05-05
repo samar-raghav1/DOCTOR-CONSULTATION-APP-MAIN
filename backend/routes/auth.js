@@ -29,6 +29,7 @@ router.post('/doctor/register',
             const doc = await Doctor.create({...req.body, password:hashed});
             const token = signToken(doc._id, 'doctor');
             res.created({token, user: {id:doc._id, type:'doctor'}},'Doctor registered')
+            console.log(token);
         } catch (error) {
             res.serverError('Registration failed', [error.message])
         }
@@ -104,45 +105,76 @@ router.post('/doctor/register',
  //Google Outh Start form here
 
 
- router.get('/google', (req,res,next) => {
-    const userType = req.query.type || 'patient';
-
-    passport.authenticate('google', {
-        scope:['profile', 'email'],
-        state:userType,
-        prompt:'select_account'
-    })(req,res,next)
- })
+router.get('/google', (req, res, next) => {
+  const userType = req.query.type || 'patient';
 
 
+ console.log("🟢 Google route hit");
+ console.log("Role:",userType);
 
- router.get('/google/callback', 
-    passport.authenticate('google', {
-        session:false,
-        failureRedirect: "/auth/failure"
-    }),
+  req.sessionUserType=userType;
 
-    async(req,res) => {
-        try {
-             const {user,type} = req.user;
-             const token = signToken(user._id,type);
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    state: userType,
+    prompt: 'select_account'
+  })(req, res, next);
+});
 
 
-             //Redirect to frontend with token
-             const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-             const redirectUrl = `${frontendUrl}/auth/success?token=${token}&type=${type}&user=${encodeURIComponent(JSON.stringify({
-                id: user._id,
-                name: user.name,
-                email:user.email,
-                profileImage: user.profileImage,
-             }))}`;
+router.get(
+  '/google/callback',
+  (req, res, next) => {
+    console.log("🔁 callback hit");
+    next();
+  },
 
-             res.redirect(redirectUrl)
-        } catch (error) {
-        res.redirect(`${process.env.FRONTEND_URL}/auth/error?message=${encodeURIComponent(e.message)}`)
-        }
+  passport.authenticate('google', {
+    session: false,
+    failureRedirect: "/auth/failure"
+  }),
+
+  async (req, res) => {
+    try {
+     console.log("✅ Passport success");
+console.log("req.user:",req.user);
+
+      const { user, type } = req.user;
+
+      const token = signToken(user._id, type);
+
+
+
+      const frontendUrl =
+        process.env.FRONTEND_URL || 'http://localhost:3000';
+
+      const userPayload = {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        profileImage: user.profileImage,
+      };
+
+      console.log("📦 User Payload:", userPayload);
+
+      const redirectUrl = `${frontendUrl}/auth/success?token=${token}&type=${type}&user=${encodeURIComponent(
+        JSON.stringify(userPayload)
+      )}`;
+
+      console.log("➡️ Redirect URL:", redirectUrl);
+
+      res.redirect(redirectUrl);
+    } catch (error) {
+      console.error("❌ Error in callback:", error);
+
+      res.redirect(
+        `${process.env.FRONTEND_URL}/auth/error?message=${encodeURIComponent(
+          error.message
+        )}`
+      );
     }
- )
+  }
+);
 
 
  //Auth failure

@@ -8,7 +8,7 @@ const adminSchema = new mongoose.Schema({
     isActive: {type: Boolean, default: true},
     lastlogin: {type: Date},
     permissions: {
-        userMangament: {type: Boolean, default: true},
+        userManagement: {type: Boolean, default: true},
         doctorManagement: {type: Boolean, default: true},
         paymentManagement: {type: Boolean, default: true},
         analytics: {type: Boolean, default: true},

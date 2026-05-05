@@ -1,9 +1,11 @@
 const express = require("express");
+require("dotenv").config();
 const { query, body } = require("express-validator");
 const validate = require("../middleware/validate");
 const { authenticate, requireRole } = require("../middleware/auth");
 const Doctor = require("../modal/Doctor");
 const Appointment = require("../modal/Appointment");
+const client = require("../config/twilio");
 
 const router = express.Router();
 
@@ -102,6 +104,7 @@ router.put(
   [
     body("name").optional().notEmpty(),
     body("specialization").optional().notEmpty(),
+     body("phone").optional().isString(),
     body("qualification").optional().notEmpty(),
     body("category").optional().notEmpty(),
     body("experience").optional().isInt({ min: 0 }),
@@ -119,6 +122,9 @@ router.put(
   validate,
   async (req, res) => {
     try {
+       if (!req.user.isPhoneVerified) {
+        return res.badRequest("Please verify phone first");
+      }
       const updated = { ...req.body };
       delete updated.password;
       updated.isVerified = true; //Mark profile as verified on update
@@ -257,6 +263,70 @@ router.get("/:doctorId", validate, async (req, res) => {
     res.ok(doctor, "doctor details fetched successfully");
   } catch (error) {
     res.serverError("Fetching doctor failed", [error.message]);
+  }
+});
+
+
+
+
+router.post("/send-otp", async (req, res) => {
+  const { phone } = req.body;
+ if (!phone.startsWith("+91")) {
+    phone = "+91" + phone;
+  }
+
+  try {
+    console.log("Phone:", phone);
+
+    await client.verify.v2
+      .services(process.env.TWILIO_VERIFY_SERVICE_SID)
+      .verifications.create({
+        to: phone,
+        channel: "sms",
+      });
+
+    res.ok(null, "OTP sent");
+  } catch (error) {
+    console.error("Twilio Error:", error); // 👈 VERY IMPORTANT
+    res.serverError("OTP send failed", [error.message]);
+  }
+});
+
+
+
+
+// ======================
+router.post("/verify-otp", authenticate, async (req, res) => {
+  const { phone, code } = req.body;
+
+ if (!phone.startsWith("+91")) {
+    phone = "+91" + phone;
+  }
+
+  try {
+    if (!phone || !code) {
+      return res.badRequest("Phone and OTP required");
+    }
+
+    const result = await client.verify.v2
+      .services(process.env.TWILIO_VERIFY_SERVICE_SID)
+      .verificationChecks.create({
+        to: phone,
+        code,
+      });
+
+    if (result.status === "approved") {
+      await Doctor.findByIdAndUpdate(req.user._id, {
+        phone,
+        isPhoneVerified: true,
+      });
+
+      return res.ok(null, "Phone verified successfully");
+    } else {
+      return res.badRequest("Invalid OTP");
+    }
+  } catch (error) {
+    res.serverError("OTP verification failed", [error.message]);
   }
 });
 

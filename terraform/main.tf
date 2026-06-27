@@ -1,7 +1,10 @@
 provider "aws" {
-    region = "us-east-1"
+    region = var.aws_region
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+}
 resource "aws_vpc" "DCAM-vpc" {
     cidr_block = var.vpc_cidr
     enable_dns_hostnames = true
@@ -12,9 +15,9 @@ resource "aws_vpc" "DCAM-vpc" {
   
 }
 
-resource "aws_subnet" "DCAM-subnets" {
+resource "aws_subnet" "public" {
     count= 2
-    vpc_id = aws_vpc.DCAM-vpc
+    vpc_id = aws_vpc.DCAM-vpc.id
     cidr_block = cidrsubnet(var.vpc_cidr, 8, count.index)
     availability_zone = data.aws_availability_zones.available.names[count.index]
     map_public_ip_on_launch = true
@@ -26,21 +29,21 @@ resource "aws_security_group" "jenkins-sg" {
   vpc_id = aws_vpc.DCAM-vpc
   name = "jenkins-sg"
 
-  ingress = {
+  ingress  {
     from_port = 8080
     to_port = 8080
     protocol= "tcp"
     cidr_blocks= ["0.0.0.0/0"]
   }
 
-  ingress= {
+  ingress {
     from_port= 22
     to_port= 22
     protocol= "tcp"
     cidr_blocks= [var.my_ip]
   }
 
-  egress = {
+  egress  {
     from_port= 0
     to_port= 0
     protocol="-1"
@@ -72,6 +75,10 @@ resource "aws_eks_cluster" "DCAM-cluster" {
 
 resource "aws_s3_bucket" "tf_state" {
   bucket = var.s3_bucket_name
+}
+
+resource "aws_s3_bucket_acl" "tf_state_acl" {
+  bucket = aws_s3_bucket.tf_state.id
   acl    = "private"
 }
 
@@ -89,7 +96,7 @@ resource "aws_dynamodb_table" "tf_lock" {
 #RDS MongoDB
 
 resource "aws_docdb_cluster" "mongo" {
-  cluster_identifier = "DCAM-mongo-cluster"
+  cluster_identifier = "dcam-mongo-cluster"
   master_username    = var.mongo_user
   master_password    = var.mongo_password
   skip_final_snapshot = true

@@ -1,0 +1,42 @@
+version: '3.9'
+
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: DCAM-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - ./backend/.env
+    restart: until-stopped
+    depends_on:
+      - mongo
+
+
+
+  mongo:
+    image: mongo:6
+    container_name: DCAM-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - ./frontend/.env
+    container_name: DCAM-fronted
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:

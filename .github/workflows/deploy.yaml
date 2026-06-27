@@ -1,0 +1,23 @@
+name: Docktor-consultation-deployment
+
+on:
+ push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Deploy via ssh
+        uses: appleboy/ssh-action@v1.0.3
+      
+        with:
+          host: ${{secrets.SSH_HOST}}
+          username: ubuntu
+          key: ${{secrets.SSH_KEY}}
+          scripts: |
+            cd /home/ubuntu/DOCTOR-CONSULTATION-APP-MAIN
+            git pull
+            docker compose up -d --build

@@ -1,5 +1,5 @@
 output "vpc_id" {
-  value = aws_vpc.main.id
+  value = aws_vpc.DCAM-vpc.id
 }
 
 output "jenkins_public_ip" {
@@ -7,7 +7,7 @@ output "jenkins_public_ip" {
 }
 
 output "eks_cluster_endpoint" {
-  value = aws_eks_cluster.mern_cluster.endpoint
+  value = aws_eks_cluster.DCAM-cluster.endpoint
 }
 
 output "mongo_endpoint" {

@@ -26,7 +26,7 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_security_group" "jenkins-sg" {
-  vpc_id = aws_vpc.DCAM-vpc
+  vpc_id = aws_vpc.DCAM-vpc.id
   name = "jenkins-sg"
 
   ingress  {
@@ -67,7 +67,7 @@ resource "aws_eks_cluster" "DCAM-cluster" {
     name = "DCAM-eks-cluster"
     role_arn = var.eks_role_arn
     vpc_config {
-      subnet_ids = aws_subnets.public[*].id
+      subnet_ids = aws_subnet.public[*].id
     }
 }
 

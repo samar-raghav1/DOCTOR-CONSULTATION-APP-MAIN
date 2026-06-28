@@ -11,5 +11,5 @@ output "eks_cluster_endpoint" {
 }
 
 output "mongo_endpoint" {
-  value = aws_docdb_cluster.mongo.endpoint
+  value = aws_db_instance.postgres.endpoint
 }

@@ -1,0 +1,24 @@
+- hosts: eks_nodes
+  become: yes
+  tasks:
+    - name: Install Docker
+      yum:
+        name: docker
+        state: present
+
+    - name: Start Docker
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Install kubelet
+      yum:
+        name: kubelet
+        state: present
+
+    - name: Enable kubelet
+      service:
+        name: kubelet
+        state: started
+        enabled: true

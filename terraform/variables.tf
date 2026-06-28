@@ -25,21 +25,16 @@ variable "eks_role_arn" {
 }
 
 variable "s3_bucket_name" {
-  default = "DCAM-terraform-state"
+  default = "dcam-terraform-state-s3"
 }
 
 variable "dynamodb_table_name" {
-  default = "DCAM-terraform-locks"
+  default = "dcam-terraform-locks-dynamoDb"
 }
 
-variable "mongo_user" {
-  default = "admin"
+variable "postgres_user" {
+  default = "terraform"
 }
-
-variable "mongo_password" {
-  default = "password123"
-}
-
-variable "mongo_instance_type" {
-  default = "db.r5.large"
+variable "postgres_password"{
+  default= "pasword123"
 }

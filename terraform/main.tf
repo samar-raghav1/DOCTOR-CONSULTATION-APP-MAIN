@@ -73,12 +73,12 @@ resource "aws_eks_cluster" "DCAM-cluster" {
 
 #S3 + DynamoDb for terraform state
 
-resource "aws_s3_bucket" "tf_state" {
+resource "aws_s3_bucket" "dcam_s3_bucket_s" {
   bucket = var.s3_bucket_name
 }
 
-resource "aws_s3_bucket_acl" "tf_state_acl" {
-  bucket = aws_s3_bucket.tf_state.id
+resource "aws_s3_bucket_acl" "dcam_s3_bucket_s_acl" {
+  bucket = aws_s3_bucket.dcam_s3_bucket_s.id
   acl    = "private"
 }
 
@@ -93,17 +93,21 @@ resource "aws_dynamodb_table" "tf_lock" {
   }
 }
 
-#RDS MongoDB
+# RDS PostgreSQL Free Tier
+resource "aws_db_instance" "postgres" {
+  identifier              = "dcam-postgres-instance"
+  allocated_storage       = 20                # Free tier allows up to 20 GB
+  engine                  = "postgres"
+  engine_version          = "16.3"            # Latest supported version
+  instance_class          = "db.t3.micro"     # Free tier eligible
+  username                = var.postgres_user
+  password                = var.postgres_password
+  db_name                 = "mydb"
+  parameter_group_name    = "default.postgres16"
+  skip_final_snapshot     = true
 
-resource "aws_docdb_cluster" "mongo" {
-  cluster_identifier = "dcam-mongo-cluster"
-  master_username    = var.mongo_user
-  master_password    = var.mongo_password
-  skip_final_snapshot = true
+  # Networking
+  vpc_security_group_ids  = [aws_security_group.jenkins-sg.id]
+  publicly_accessible     = false
 }
 
-resource "aws_docdb_cluster_instance" "mongo_instances" {
-  count              = 2
-  cluster_identifier = aws_docdb_cluster.mongo.id
-  instance_class     = var.mongo_instance_type
-}

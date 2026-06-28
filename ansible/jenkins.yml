@@ -1,0 +1,40 @@
+- hosts: jenkins
+  become: yes
+  tasks:
+    - name: Install Java
+      yum:
+        name: java-21-openjdk
+        state: present
+
+    - name: Install Jenkins
+      yum:
+        name: jenkins
+        state: present
+
+    - name: Start Jenkins service
+      service:
+        name: jenkins
+        state: started
+        enabled: true
+
+    - name: Install Docker
+      yum:
+        name: docker
+        state: present
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Install kubectl
+      get_url:
+        url: https://amazon-eks.s3.us-west-2.amazonaws.com/1.27.0/2023-07-05/bin/linux/amd64/kubectl
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+
+    - name: Install Helm
+      get_url:
+        url: https://get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz
+        dest: /tmp/helm.tar.gz

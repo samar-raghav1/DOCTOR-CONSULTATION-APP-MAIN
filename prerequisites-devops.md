@@ -1,17 +1,20 @@
 ### 1.Prerequisites
 ### Docker & docker-compose   --> 
+'''
 sudo apt install docker.io /
 sudo usermod -aG docker ubuntu /
 newgrp docker /
-
+'''
+'''
 sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) \
 -o /usr/local/bin/docker-compose /
 sudo chmod +x /usr/local/bin/docker-compose /
 docker-compose --version /
-
+'''
 
 
 ### kind -->
+'''
 # 1. Download latest Kind binary
 curl -Lo ./kind "https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64"
 
@@ -23,7 +26,8 @@ sudo mv ./kind /usr/local/bin/
 
 # 4. Verify installation
 kind version
-
+'''
+'''
 ### kubectl
 # 1. Update package index
 sudo apt update
@@ -39,9 +43,11 @@ sudo mv kubectl /usr/local/bin/
 
 # 5. Verify installation
 kubectl version --client
+'''
 
 
 ### Ansible & terraform -->
+'''
 # 1. Update packages
 sudo apt update
 
@@ -50,7 +56,8 @@ sudo apt install -y ansible
 
 # 3. Verify
 ansible --version
-
+'''
+'''
 
 # 1. Update packages
 sudo apt update && sudo apt upgrade -y
@@ -72,3 +79,4 @@ sudo apt update && sudo apt install -y terraform
 terraform -version
 
 
+'''
